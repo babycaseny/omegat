@@ -464,18 +464,16 @@ public class GITRemoteRepository implements IRemoteRepository {
                     }
                     continue;
                 } else if (i instanceof CredentialItem.StringType) {
-                    if (i.getPromptText().equals("Password: ")) {
-                        if (credentials.password==null) {
+                    if (credentials.password==null) {
+                        if (!ok) {
+                            ok = askCredentials(uri.getUser(), i.getPromptText());
                             if (!ok) {
-                                ok = askCredentials(uri.getUser());
-                                if (!ok) {
-                                    throw new UnsupportedCredentialItem(uri, OStrings.getString("TEAM_CREDENTIALS_DENIED"));
-                                }
+                                throw new UnsupportedCredentialItem(uri, OStrings.getString("TEAM_CREDENTIALS_DENIED"));
                             }
                         }
-                        ((CredentialItem.StringType) i).setValue(new String(credentials.password));
-                        continue;
                     }
+                    ((CredentialItem.StringType) i).setValue(new String(credentials.password));
+                    continue;
                 } else if (i instanceof CredentialItem.YesNoType) {
                     //e.g.: The authenticity of host 'mygitserver' can't be established.
                     //RSA key fingerprint is e2:d3:84:d5:86:e7:68:69:a0:aa:a6:ad:a3:a0:ab:a2.
@@ -521,6 +519,9 @@ public class GITRemoteRepository implements IRemoteRepository {
                 else if (i instanceof CredentialItem.Password)
                     continue;
 
+                else if (i instanceof CredentialItem.StringType)
+                    continue;
+
                 else
                     return false;
             }
@@ -532,9 +533,16 @@ public class GITRemoteRepository implements IRemoteRepository {
          * @return true when entered, false on cancel.
          */
         private boolean askCredentials(String usernameInUri) {
+            return askCredentials(usernameInUri, null);
+        }
+        private boolean askCredentials(String usernameInUri, String prompt) {
             TeamUserPassDialog userPassDialog = new TeamUserPassDialog(Core.getMainWindow().getApplicationFrame());
             DockingUI.displayCentered(userPassDialog);
-            userPassDialog.descriptionTextArea.setText(OStrings.getString(credentials.username==null ? "TEAM_USERPASS_FIRST" : "TEAM_USERPASS_WRONG"));
+            if (prompt != null && !"".equals(prompt)){
+                userPassDialog.descriptionTextArea.setText(prompt);
+            } else {
+                userPassDialog.descriptionTextArea.setText(OStrings.getString(credentials.username==null ? "TEAM_USERPASS_FIRST" : "TEAM_USERPASS_WRONG"));
+            }
             //if username is already available in uri, then we will not be asked for an username, so we cannot change it.
             if (usernameInUri != null && !"".equals(usernameInUri)) {
                 userPassDialog.userText.setText(usernameInUri);
