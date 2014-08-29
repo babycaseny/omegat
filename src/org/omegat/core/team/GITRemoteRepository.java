@@ -465,11 +465,9 @@ public class GITRemoteRepository implements IRemoteRepository {
                     continue;
                 } else if (i instanceof CredentialItem.StringType) {
                     if (credentials.password==null) {
+                        ok = askCredentials(uri.getUser(), i.getPromptText());
                         if (!ok) {
-                            ok = askCredentials(uri.getUser(), i.getPromptText());
-                            if (!ok) {
-                                throw new UnsupportedCredentialItem(uri, OStrings.getString("TEAM_CREDENTIALS_DENIED"));
-                            }
+                            throw new UnsupportedCredentialItem(uri, OStrings.getString("TEAM_CREDENTIALS_DENIED"));
                         }
                     }
                     ((CredentialItem.StringType) i).setValue(new String(credentials.password));
